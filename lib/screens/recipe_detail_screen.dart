@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:praktikum_5/configs/demo.dart';
+import 'package:praktikum_5/models/recipe_model.dart';
 
 class RecipeDetailScreen extends StatelessWidget {
-  const RecipeDetailScreen({Key? key}) : super(key: key);
+  const RecipeDetailScreen({Key? key, required RecipeModel recipe})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
