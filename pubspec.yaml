@@ -38,6 +38,7 @@ dependencies:
   flutter_html: ^3.0.0-beta.2
   wakelock_plus: ^1.2.10
   http: ^1.3.0
+  carousel_slider: ^5.0.0
 
 dev_dependencies:
   flutter_test:

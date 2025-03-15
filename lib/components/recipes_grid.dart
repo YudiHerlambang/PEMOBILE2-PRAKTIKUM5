@@ -22,43 +22,51 @@ class _RecipesGridState extends State<RecipesGrid> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
+    return FutureBuilder<List<RecipeModel>>(
       future: _futureRecipes,
-      builder: TampilanViewDibuatFungsiTerpisah,
+      builder: (context, snapshot) {
+        return _buildRecipeView(context, snapshot);
+      },
     );
   }
 
-  Widget TampilanViewDibuatFungsiTerpisah(
-    BuildContext context,
-    AsyncSnapshot<List<RecipeModel>> snapshot,
-  ) {
+  Widget _buildRecipeView(BuildContext context, AsyncSnapshot<List<RecipeModel>> snapshot) {
     if (snapshot.connectionState == ConnectionState.waiting) {
-      return SliverToBoxAdapter(child: CircularProgressIndicator());
+      return const SliverToBoxAdapter(
+        child: Center(child: CircularProgressIndicator()),
+      );
     } else if (snapshot.hasError) {
-      return SliverToBoxAdapter(child: Text('Error: ${snapshot.error}'));
-    } else if (!snapshot.hasData) {
-      return SliverToBoxAdapter(child: Text('No data'));
+      return SliverToBoxAdapter(
+        child: Center(child: Text('Error: ${snapshot.error}')),
+      );
+    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+      return const SliverToBoxAdapter(
+        child: Center(child: Text('No data')),
+      );
     } else {
       return SliverGrid(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 0.75,
+          crossAxisSpacing: 5,
+          mainAxisSpacing: 3, // Perubahan di sini
+          childAspectRatio: 1,
         ),
-        delegate: SliverChildBuilderDelegate((context, index) {
-          return ItemCardRecipe(
-            recipe: snapshot.data![index],
-            onTap: (RecipeModel recipe) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RecipeDetailScreen(recipe: recipe),
-                ),
-              );
-            },
-          );
-        }, childCount: snapshot.data!.length),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            return ItemCardRecipe(
+              recipe: snapshot.data![index],
+              onTap: (RecipeModel recipe) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RecipeDetailScreen(recipe: recipe),
+                  ),
+                );
+              },
+            );
+          },
+          childCount: snapshot.data!.length,
+        ),
       );
     }
   }

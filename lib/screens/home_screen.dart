@@ -23,24 +23,24 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              "Resep Makanan".toUpperCase(),
-              style: TextStyle(
+              'Resep Makanan'.toUpperCase(),
+              style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: Colors.amber,
               ),
             ),
-            Text(
-              "Masak Sendiri Kesukaanmu",
+            const Text(
+              'Masak Sendiri Kesukaanmu',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ],
         ),
-        leading: Icon(Icons.menu),
+        leading: const Icon(Icons.menu),
         actions: [
           Container(
-            margin: EdgeInsets.only(right: 10),
-            child: Padding(
+            margin: const EdgeInsets.only(right: 18),
+            child: const Padding(
               padding: EdgeInsets.all(6),
               child: Icon(Icons.search),
             ),
@@ -49,15 +49,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: CustomScrollView(
         slivers: [
-          SliverPadding(
+          const SliverPadding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverToBoxAdapter(child: BannerCarousel()),
           ),
           TitleSection(title: "Jenis Makanan", onPressed: () {}),
-          SliverToBoxAdapter(child: FoodCategories()),
+          const SliverToBoxAdapter(child: FoodCategories()),
           TitleSection(title: "Resep", onPressed: () {}),
-          // make List 2 grid column
-          SliverPadding(
+          const SliverPadding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             sliver: RecipesGrid(),
           ),
