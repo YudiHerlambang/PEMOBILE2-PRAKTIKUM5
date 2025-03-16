@@ -1,12 +1,153 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:praktikum_5/configs/demo.dart';
 import 'package:praktikum_5/models/recipe_model.dart';
+import 'package:praktikum_5/models/review_model.dart';
+import 'package:praktikum_5/services/api_service.dart';
 
-class RecipeDetailScreen extends StatelessWidget {
+class RecipeDetailScreen extends StatefulWidget {
   const RecipeDetailScreen({Key? key, required RecipeModel recipe})
-    : super(key: key);
+      : super(key: key);
+
+  @override
+  _RecipeDetailScreenState createState() => _RecipeDetailScreenState();
+}
+
+class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
+  final _formKey = GlobalKey<FormState>();
+  String _name = '';
+  String _description = '';
+  String _ratting = 'good';
+  File? _image;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    setState(() {
+      if (pickedFile != null) {
+        _image = File(pickedFile.path);
+      } else {
+        print('No image selected.');
+      }
+    });
+  }
+
+  Future<void> _submitReview(BuildContext context) async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      try {
+        String imageId = _image != null ? await ApiService.uploadImage(_image!) : "";
+        ReviewModel review = ReviewModel(
+          recipesId: 1,
+          name: _name,
+          description: _description,
+          ratting: _ratting,
+          image: imageId,
+        );
+        bool success = await ApiService.postReview(review);
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Review berhasil dikirim!')),
+          );
+          Navigator.pop(context); // Tutup modal setelah berhasil
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal mengirim review.')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Terjadi kesalahan: $e')),
+        );
+      }
+    }
+  }
+
+  void _showReviewDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 16,
+              right: 16,
+              top: 16,
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Nama'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Masukkan nama Anda';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) => _name = value!,
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Isi Review'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Masukkan review Anda';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) => _description = value!,
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: _ratting,
+                    items: <String>['good', 'no_good']
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value == 'good' ? 'Good' : 'No Good'),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _ratting = newValue!;
+                      });
+                    },
+                    decoration: InputDecoration(labelText: 'Rating'),
+                  ),
+                  ElevatedButton(
+                    onPressed: _pickImage,
+                    child: Text('Pilih Gambar'),
+                  ),
+                  if (_image != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Image.file(
+                        _image!,
+                        height: 100,
+                      ),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: ElevatedButton(
+                      onPressed: () => _submitReview(context),
+                      child: Text('Kirim Review'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +186,7 @@ class RecipeDetailScreen extends StatelessWidget {
                           child: Container(
                             width: double.maxFinite,
                             decoration: BoxDecoration(
-                              color: Colors.white, // 70% opacity
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
@@ -58,9 +199,7 @@ class RecipeDetailScreen extends StatelessWidget {
                             ),
                             child: Padding(
                               padding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
+                                  horizontal: 16, vertical: 16),
                               child: MarkdownBody(
                                 data: sampleIngredientsWithMarkdownFormat,
                               ),
@@ -82,42 +221,35 @@ class RecipeDetailScreen extends StatelessWidget {
                 children: [
                   Html(
                     data: """
-                  <h2>Langkah-langkah</h2>
-                  <ol>
-                    <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
-                    <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
-                    <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
-                    <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
-                    <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
-                    <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
-                    <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
-                    <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
-                    <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
-                    <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
-                  </ol>
-                  """,
+                      <h2>Langkah-langkah</h2>
+                      <ol>
+                        <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                        <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                        <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                        <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                        <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                        <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                        <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                        <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                        <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                        <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                      </ol>
+                    """,
                   ),
-                  // Text(
-                  //   'Langkah-langkah'.toUpperCase(),
-                  //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  // ),
-                  // SizedBox(height: 8),
-                  // Column(
-                  //   children: List.generate(
-                  //     10,
-                  //     (index) => ListTile(
-                  //       leading: CircleAvatar(
-                  //         backgroundColor: Colors.amber,
-                  //         child: Text('${index + 1}'),
-                  //       ),
-                  //       title: Text('Langkah ${index + 1}'),
-                  //       subtitle: Text(
-                  //         'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
                 ],
+              ),
+            ),
+          ),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ElevatedButton(
+                  onPressed: () => _showReviewDialog(context),
+                  child: Text('Review'),
+                ),
               ),
             ),
           ),

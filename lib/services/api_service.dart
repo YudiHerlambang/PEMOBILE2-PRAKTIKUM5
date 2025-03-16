@@ -1,13 +1,19 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:praktikum_5/models/banner_model.dart';
 import 'package:praktikum_5/models/category_model.dart';
 import 'package:praktikum_5/models/recipe_model.dart';
+import 'package:praktikum_5/models/review_model.dart';
 
 class ApiService {
   static const String API_URL = 'https://polindra.cicd.my.id/items/';
   static const String ASSET_URL = 'https://polindra.cicd.my.id/assets/';
+  static const String UPLOAD_URL = 'https://polindra.cicd.my.id/files';
+  static const String REVIEW_URL = 'https://polindra.cicd.my.id/items/fr_reviews';
+  
 
+  // Get Data
   static Uri getUri(String collection) {
     return Uri.parse('$API_URL$collection');
   }
@@ -55,6 +61,35 @@ class ApiService {
       return data.map((item) => RecipeModel.fromJson(item)).toList();
     } else {
       throw Exception('Failed to load recipes');
+    }
+  }
+
+  // Upload Gambar ke Server
+  static Future<String> uploadImage(File imageFile) async {
+    var request = http.MultipartRequest('POST', Uri.parse(UPLOAD_URL));
+    request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+
+    var response = await request.send();
+    if (response.statusCode == 200) {
+      final res = jsonDecode(await response.stream.bytesToString());
+      return res['data']['id']; // Ambil ID gambar dari server
+    } else {
+      throw Exception('Gagal mengupload gambar');
+    }
+  }
+
+  // Kirim Review ke Server
+  static Future<bool> postReview(ReviewModel review) async {
+    final response = await http.post(
+      Uri.parse(REVIEW_URL),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(review.toJson()),
+    );
+
+    if (response.statusCode == 201) {
+      return true;
+    } else {
+      throw Exception('Gagal mengirim review: ${response.body}');
     }
   }
 }

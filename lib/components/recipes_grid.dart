@@ -48,8 +48,8 @@ class _RecipesGridState extends State<RecipesGrid> {
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 5,
-          mainAxisSpacing: 3, // Perubahan di sini
-          childAspectRatio: 1,
+          mainAxisSpacing: 2, // Perubahan di sini
+          childAspectRatio: 1.4,
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
