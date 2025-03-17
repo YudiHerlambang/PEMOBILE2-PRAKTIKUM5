@@ -2,17 +2,19 @@ class ReviewModel {
   final int recipesId;
   final String name;
   final String description;
-  final String ratting; // Perbaiki nama bidang
+  final String ratting;
   final String? image;
-  final String? userCreated; // Tambahkan user_created (opsional)
+  final String? userCreated;
+  final String? status;
 
   ReviewModel({
     required this.recipesId,
     required this.name,
     required this.description,
-    required this.ratting, // Perbaiki nama bidang
+    required this.ratting,
     this.image,
-    this.userCreated, // Tambahkan user_created (opsional)
+    this.userCreated,
+    this.status,
   });
 
   Map<String, dynamic> toJson() {
@@ -20,9 +22,10 @@ class ReviewModel {
       'recipes_id': recipesId,
       'name': name,
       'description': description,
-      'ratting': ratting, // Perbaiki nama bidang
+      'ratting': ratting,
       'image': image,
-      'user_created': userCreated, // Tambahkan user_created (opsional)
+      'user_created': userCreated,
+      'status': status,
     };
   }
 }

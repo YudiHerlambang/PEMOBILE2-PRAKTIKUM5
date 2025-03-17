@@ -9,8 +9,8 @@ import 'package:praktikum_5/models/review_model.dart';
 import 'package:praktikum_5/services/api_service.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
-  const RecipeDetailScreen({Key? key, required RecipeModel recipe})
-      : super(key: key);
+  final RecipeModel recipe;
+  const RecipeDetailScreen({Key? key, required this.recipe}) : super(key: key);
 
   @override
   _RecipeDetailScreenState createState() => _RecipeDetailScreenState();
@@ -40,20 +40,25 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       try {
-        String imageId = _image != null ? await ApiService.uploadImage(_image!) : "";
+        String imageId = "";
+        if (_image != null) {
+          imageId = await ApiService.uploadImage(_image!);
+        }
+
         ReviewModel review = ReviewModel(
-          recipesId: 1,
+          recipesId: widget.recipe.id,
           name: _name,
           description: _description,
           ratting: _ratting,
           image: imageId,
+          status: "published",
         );
         bool success = await ApiService.postReview(review);
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Review berhasil dikirim!')),
           );
-          Navigator.pop(context); // Tutup modal setelah berhasil
+          Navigator.pop(context);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Gagal mengirim review.')),
@@ -107,11 +112,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   ),
                   DropdownButtonFormField<String>(
                     value: _ratting,
-                    items: <String>['good', 'no_good']
+                    items: <String>['good', 'not_good']
                         .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
-                        child: Text(value == 'good' ? 'Good' : 'No Good'),
+                        child: Text(value == 'good' ? 'Good' : 'Not Good'),
                       );
                     }).toList(),
                     onChanged: (String? newValue) {
@@ -158,7 +163,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         title: Column(
           children: [
             Text(
-              'Pizza Mozarella'.toUpperCase(),
+              '${widget.recipe.name}'.toUpperCase(),
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ],
@@ -177,7 +182,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               children: [
                 Stack(
                   children: [
-                    Image.asset('assets/images/banner1.jpeg'),
+                    Image.network(ApiService.getAsset(widget.recipe.image)),
                     Column(
                       children: [
                         SizedBox(height: 200),

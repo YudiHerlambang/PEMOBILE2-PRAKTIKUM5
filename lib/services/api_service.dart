@@ -5,15 +5,16 @@ import 'package:praktikum_5/models/banner_model.dart';
 import 'package:praktikum_5/models/category_model.dart';
 import 'package:praktikum_5/models/recipe_model.dart';
 import 'package:praktikum_5/models/review_model.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:html' as html;
 
 class ApiService {
   static const String API_URL = 'https://polindra.cicd.my.id/items/';
   static const String ASSET_URL = 'https://polindra.cicd.my.id/assets/';
   static const String UPLOAD_URL = 'https://polindra.cicd.my.id/files';
   static const String REVIEW_URL = 'https://polindra.cicd.my.id/items/fr_reviews';
-  
 
-  // Get Data
+  // Get Data (tidak ada perubahan)
   static Uri getUri(String collection) {
     return Uri.parse('$API_URL$collection');
   }
@@ -64,21 +65,41 @@ class ApiService {
     }
   }
 
-  // Upload Gambar ke Server
+  // Upload Gambar ke Server (perbaikan di sini)
   static Future<String> uploadImage(File imageFile) async {
-    var request = http.MultipartRequest('POST', Uri.parse(UPLOAD_URL));
-    request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+    if (kIsWeb) {
+      // Web
+      final bytes = await imageFile.readAsBytes();
+      final blob = html.Blob([bytes]);
+      final formData = html.FormData();
+      formData.appendBlob('file', blob, 'image.jpg');
 
-    var response = await request.send();
-    if (response.statusCode == 200) {
-      final res = jsonDecode(await response.stream.bytesToString());
-      return res['data']['id']; // Ambil ID gambar dari server
+      final request = http.Request('POST', Uri.parse(UPLOAD_URL));
+      request.body = formData as String;
+
+      final response = await request.send();
+      if (response.statusCode == 200) {
+        final res = jsonDecode(await response.stream.bytesToString());
+        return res['data']['id'];
+      } else {
+        throw Exception('Gagal mengupload gambar (web)');
+      }
     } else {
-      throw Exception('Gagal mengupload gambar');
+      // Native (Android, iOS)
+      var request = http.MultipartRequest('POST', Uri.parse(UPLOAD_URL));
+      request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+
+      var response = await request.send();
+      if (response.statusCode == 200) {
+        final res = jsonDecode(await response.stream.bytesToString());
+        return res['data']['id'];
+      } else {
+        throw Exception('Gagal mengupload gambar (native)');
+      }
     }
   }
 
-  // Kirim Review ke Server
+  // Kirim Review ke Server (tetap sama)
   static Future<bool> postReview(ReviewModel review) async {
     final response = await http.post(
       Uri.parse(REVIEW_URL),
